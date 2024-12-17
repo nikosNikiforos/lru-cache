@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class LRUCacheTest {
+    //aimilios arxi
     @Test
     void testHeadTailOrder() {
         LRUCache<Integer, String> cache = new LRUCache<>(3);
@@ -127,7 +128,9 @@ class LRUCacheTest {
         assertEquals("Two", cache.get(2));
         assertEquals("Three", cache.get(3));
         assertEquals("Four", cache.get(4));
-    }
+    } //aimilios telos
+
+    //arxi nikos
 
     @Test
     void testSingleCapacity() {
