@@ -6,11 +6,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class LRUCacheTest {
-    //aimilios arxi
     @Test
     void testHeadTailOrder() {
+        // Έλεγχος της σωστής σειράς στοιχείων head/tail
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test head/tail ordering with multiple items
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -21,36 +20,35 @@ class LRUCacheTest {
 
     @Test
     void testAccessUpdatesOrder() {
+        // Έλεγχος ενημέρωσης σειράς μετά από πρόσβαση σε στοιχείο
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test that accessing items updates head/tail correctly
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        cache.get(1);  // Access oldest item
-
+        cache.get(1);
         assertEquals("One", cache.getHead());
         assertEquals("Two", cache.getTail());
     }
 
     @Test
     void testEvictionOrder() {
+        // Έλεγχος σωστής απομάκρυνσης στοιχείων όταν γεμίσει η cache
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test that eviction removes from tail
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
-        cache.put(4, "Four");  // Should evict "One"
+        cache.put(4, "Four");
 
         assertEquals("Four", cache.getHead());
         assertEquals("Two", cache.getTail());
-        assertNull(cache.get(1));  // Verify "One" was evicted
+        assertNull(cache.get(1));
     }
 
     @Test
     void testUpdateExisting() {
+        // Έλεγχος ενημέρωσης υπάρχοντος στοιχείου
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test updating existing item moves it to head
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(1, "One Updated");
@@ -58,10 +56,10 @@ class LRUCacheTest {
         assertEquals("One Updated", cache.getHead());
         assertEquals("Two", cache.getTail());
     }
+
     @Test
     void testUpdateExisting2() {
-        // Verifies that updating existing keys works correctly
-        // and maintains proper LRU order
+        // Εκτεταμένος έλεγχος ενημέρωσης υπαρχόντων κλειδιών
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         cache.put(1, "One");
         cache.put(2, "Two");
@@ -70,11 +68,9 @@ class LRUCacheTest {
         assertEquals("One Updated", cache.get(1));
         assertEquals("Two", cache.get(2));
 
-        // Add new items to verify LRU order after update
         cache.put(3, "Three");
         cache.put(4, "Four");
 
-        // 1 should be evicted as it's least recently used
         assertNull(cache.get(1));
         assertEquals("Two", cache.get(2));
         assertEquals("Three", cache.get(3));
@@ -83,8 +79,8 @@ class LRUCacheTest {
 
     @Test
     void testFrequentAccess() {
+        // Έλεγχος συμπεριφοράς με συχνή πρόσβαση στο ίδιο στοιχείο
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test frequent access to same item keeps it at head
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -97,77 +93,66 @@ class LRUCacheTest {
 
     @Test
     void testCapacityEnforcement() {
+        // Έλεγχος τήρησης ορίου χωρητικότητας
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        // Test cache doesn't exceed capacity
         for (int i = 0; i < 10; i++) {
             cache.put(i, "Value" + i);
         }
 
-        assertEquals(3, cache.size());  // Capacity should be maintained
+        assertEquals(3, cache.size());
         assertEquals("Value9", cache.getHead());
     }
+
     @Test
     void testBasicFunctionality() {
-        // This test verifies the fundamental operations of the cache
-        // including put, get, and basic eviction
+        // Έλεγχος βασικής λειτουργικότητας και εκτοπισμού
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        // Verify all items are retrievable
         assertEquals("One", cache.get(1));
         assertEquals("Two", cache.get(2));
         assertEquals("Three", cache.get(3));
 
-        // Add fourth item, should evict oldest (1)
         cache.put(4, "Four");
 
-        // Verify eviction and remaining items
-        assertNull(cache.get(1), "Item 1 should have been evicted");
+        assertNull(cache.get(1));
         assertEquals("Two", cache.get(2));
         assertEquals("Three", cache.get(3));
         assertEquals("Four", cache.get(4));
-    } //aimilios telos
-
-    //arxi nikos
+    }
 
     @Test
     void testSingleCapacity() {
-        // Tests the edge case of a cache with capacity 1
-        // Verifies that the cache can handle minimal size correctly
+        // Έλεγχος συμπεριφοράς cache μεγέθους 1
         LRUCache<Integer, String> singleCache = new LRUCache<>(1);
-
         singleCache.put(1, "One");
         assertEquals("One", singleCache.get(1));
 
         singleCache.put(2, "Two");
-        assertNull(singleCache.get(1), "First item should be evicted");
+        assertNull(singleCache.get(1));
         assertEquals("Two", singleCache.get(2));
     }
 
     @Test
     void testAccessPattern() {
-        // Tests how accessing items affects their position in the cache
-        // Verifies that the LRU eviction policy works correctly
+        // Έλεγχος μοτίβου πρόσβασης και επίδρασης στη σειρά LRU
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        // Access items in specific order to change their LRU status
-        cache.get(1);  // Makes 1 most recently used
-        cache.get(2);  // Now 2 is most recent, 3 is least recent
+        cache.get(1);
+        cache.get(2);
 
-        // Add new item, should evict 3 (least recently used)
         cache.put(4, "Four");
 
-        assertNull(cache.get(3), "Item 3 should be evicted");
+        assertNull(cache.get(3));
         assertEquals("One", cache.get(1));
         assertEquals("Two", cache.get(2));
         assertEquals("Four", cache.get(4));
     }
-
 
     @Test
     void testLargeCapacityAndOperations() {
