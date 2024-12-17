@@ -1,59 +1,87 @@
-
-import org.hua.cache.Cache;
 import org.hua.cache.LRUCache;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+
+
+
 class LRUCacheTest {
-
     @Test
-    void testPutAndGet() {
-        Cache<Integer, String> cache = new LRUCache<>(2);
+    void testHeadTailOrder() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test head/tail ordering with multiple items
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(3, "Three");
 
-        // Προσθήκη τιμών
-        cache.put(1, "A");
-        cache.put(2, "B");
-
-        // Έλεγχος τιμών
-        assertEquals("A", cache.get(1)); // Πρόσφατα χρησιμοποιημένο: 1
-        assertEquals("B", cache.get(2)); // Πρόσφατα χρησιμοποιημένο: 2
+        assertEquals("Three", cache.getHead());
+        assertEquals("One", cache.getTail());
     }
 
     @Test
-    void testEvictionPolicy() {
-        Cache<Integer, String> cache = new LRUCache<>(2);
+    void testAccessUpdatesOrder() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test that accessing items updates head/tail correctly
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(3, "Three");
 
-        // Προσθήκη τιμών
-        cache.put(1, "A");
-        cache.put(2, "B");
-        cache.put(3, "C"); // 1 πρέπει να αφαιρεθεί
+        cache.get(1);  // Access oldest item
 
-        assertNull(cache.get(1));
-        assertEquals("B", cache.get(2));
-        assertEquals("C", cache.get(3));
+        assertEquals("One", cache.getHead());
+        assertEquals("Two", cache.getTail());
     }
 
     @Test
-    void testOverwriteValue() {
-        Cache<Integer, String> cache = new LRUCache<>(2);
+    void testEvictionOrder() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test that eviction removes from tail
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(3, "Three");
+        cache.put(4, "Four");  // Should evict "One"
 
-        // Προσθήκη τιμών
-        cache.put(1, "A");
-        cache.put(1, "B"); // Αντικατάσταση της τιμής για το κλειδί 1
-
-        assertEquals("B", cache.get(1)); // Έλεγχος αντικατάστασης τιμής
+        assertEquals("Four", cache.getHead());
+        assertEquals("Two", cache.getTail());
+        assertNull(cache.get(1));  // Verify "One" was evicted
     }
 
     @Test
-    void testEdgeCases() {
-        Cache<Integer, String> cache = new LRUCache<>(1);
+    void testUpdateExisting() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test updating existing item moves it to head
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(1, "One Updated");
 
-        // Μία μόνο θέση στη μνήμη
-        cache.put(1, "A");
-        assertEquals("A", cache.get(1));
-
-        cache.put(2, "B"); // 1 πρέπει να αφαιρεθεί
-        assertNull(cache.get(1));
-        assertEquals("B", cache.get(2));
+        assertEquals("One Updated", cache.getHead());
+        assertEquals("Two", cache.getTail());
     }
+
+    @Test
+    void testFrequentAccess() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test frequent access to same item keeps it at head
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(3, "Three");
+
+        for (int i = 0; i < 5; i++) {
+            cache.get(1);
+            assertEquals("One", cache.getHead());
+        }
+    }
+
+    @Test
+    void testCapacityEnforcement() {
+        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Test cache doesn't exceed capacity
+        for (int i = 0; i < 10; i++) {
+            cache.put(i, "Value" + i);
+        }
+
+        assertEquals(3, cache.size());  // Capacity should be maintained
+        assertEquals("Value9", cache.getHead());
+    }
+
 }
