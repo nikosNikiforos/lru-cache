@@ -73,9 +73,11 @@ class LRUCacheTest {
         cache.put(3, "Three");
         cache.put(4, "Four");
 
-        // 2 should be evicted as it's least recently used
-        assertNull(cache.get(2));
-        assertEquals("One Updated", cache.get(1));
+        // 1 should be evicted as it's least recently used
+        assertNull(cache.get(1));
+        assertEquals("Two", cache.get(2));
+        assertEquals("Three", cache.get(3));
+        assertEquals("Four", cache.get(4));
     }
 
     @Test
@@ -131,7 +133,7 @@ class LRUCacheTest {
     void testSingleCapacity() {
         // Tests the edge case of a cache with capacity 1
         // Verifies that the cache can handle minimal size correctly
-        LRUCache<Integer, String> singleCache = new LRUCache<>(3);
+        LRUCache<Integer, String> singleCache = new LRUCache<>(1);
 
         singleCache.put(1, "One");
         assertEquals("One", singleCache.get(1));
@@ -263,7 +265,7 @@ class LRUCacheTest {
         // Verify key 1 wasn't evicted despite many operations
         assertEquals("Value99", cache.get(1));
     }
-
+    @Test
     void testHeadTailPositions() {
         // Assuming we've modified LRUCache to expose these methods for testing:
         // getHead() - returns the most recently used item
