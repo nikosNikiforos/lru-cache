@@ -204,17 +204,27 @@ class LRUCacheTest {
 
     @Test
     void testNullHandling() {
-        // Tests handling of null keys and values
-
-        // Test null key
+        // Δημιουργία LRUCache με χωρητικότητα 3
         LRUCache<Integer, String> cache = new LRUCache<>(3);
+
+        // Έλεγχος ότι το null key ρίχνει NullPointerException
         assertThrows(NullPointerException.class, () -> cache.put(null, "Value"));
+
+        // Έλεγχος ότι το null value ρίχνει NullPointerException
+        assertThrows(NullPointerException.class, () -> cache.put(1, null));
+
+        // Έλεγχος ότι η get με null κλειδί επιστρέφει null
         assertNull(cache.get(null));
 
-        // Test null value
-        cache.put(1, null);
-        assertNull(cache.get(1));
+        // Κανονική εισαγωγή
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        assertEquals("One", cache.get(1)); // Ελέγχουμε την τιμή
+
+        // Cache πρέπει να παραμείνει με 2 στοιχεία
+        assertEquals(2, cache.size());
     }
+
     @Test
     void testMixedOperations() {
         // Tests cache behavior under a mix of operations

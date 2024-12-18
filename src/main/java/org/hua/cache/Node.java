@@ -1,15 +1,14 @@
-
 package org.hua.cache;
 
-
-class Node<K, V> {
-    K key;        // Κλειδί του στοιχείου
-    V value;      // Τιμή του στοιχείου
+public class Node<K, V> {
+    K key;           // Το κλειδί του κόμβου
+    V value;         // Η τιμή του κόμβου
     Node<K, V> prev; // Δείκτης στον προηγούμενο κόμβο
     Node<K, V> next; // Δείκτης στον επόμενο κόμβο
 
-    Node(K key, V value) {
+    public Node(K key, V value) {
         this.key = key;
         this.value = value;
     }
 }
+
