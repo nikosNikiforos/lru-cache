@@ -156,20 +156,20 @@ class LRUCacheTest {
 
     @Test
     void testLargeCapacityAndOperations() {
-        // Tests cache behavior with larger capacity and many operations
+        //Έλεγχος για μεγάλο capacity και πολλές λειτουργίες
        LRUCache<Integer, String> largeCache = new LRUCache<>(100);
 
-        // Add more items than cache capacity
+        // Προσθήκη περισσότερων στοιχείων απο τη χωρητικότητα
         for (int i = 0; i < 150; i++) {
             largeCache.put(i, "Value" + i);
         }
 
-        // Verify last 100 items are present
+        //Έλεγχος για τα τελευταία 100
         for (int i = 50; i < 150; i++) {
             assertEquals("Value" + i, largeCache.get(i));
         }
 
-        // Verify first 50 items were evicted
+        //Επαλήθευση απομάκρυνσης των πρώτων
         for (int i = 0; i < 50; i++) {
             assertNull(largeCache.get(i));
         }
@@ -177,42 +177,37 @@ class LRUCacheTest {
 
     @Test
     void testRepeatedKeyUpdateAndOrder() {
-        // Tests cache behavior when repeatedly updating the same key
-        // while adding other entries
-        LRUCache<Integer, String> largeCache = new LRUCache<>(3);
-        largeCache.put(1, "One");
-        largeCache.put(2, "Two");
+        // Έλεγχος για επαναλαμβανόμενη ενημέρωση του ίδιου κλειδιού ενώ παράλληλα γίνονται άλλες προσθήκες
+
+        LRUCache<Integer, String> bigCache = new LRUCache<>(3);
+        bigCache.put(1, "One");
+        bigCache.put(2, "Two");
 
         for (int i = 0; i < 10; i++) {
-            largeCache.put(1, "One-" + i);
-            largeCache.put(i + 3, "Value" + i);
+            bigCache.put(1, "One-" + i);
+            bigCache.put(i + 3, "Value" + i);
 
-            // Verify key 1 remains in cache and has correct value
-            assertEquals("One-" + i, largeCache.get(1));
+            //Έλεγχος οτι υπάρχει στη μνήμη με σωστή τιμή
+            assertEquals("One-" + i, bigCache.get(1));
         }
 
-        // Verify key 1 is still in cache after all operations
-        assertNotNull(largeCache.get(1));
+
     }
     @Test
     void testEmptyCache() {
-        // Tests behavior of an empty cache
+        // Δοκιμή για κενή μνήμη
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-        assertNull(cache.get(1), "Empty cache should return null for any key");
-        assertNull(cache.get(0), "Empty cache should return null for any key");
+        assertNull(cache.get(1), "Empty cache so any key is null");
+        assertNull(cache.get(0), "Empty cache so any key is null");
     }
 
     @Test
     void testNullHandling() {
-        // Δημιουργία LRUCache με χωρητικότητα 3
         LRUCache<Integer, String> cache = new LRUCache<>(3);
-
         // Έλεγχος ότι το null key ρίχνει NullPointerException
         assertThrows(NullPointerException.class, () -> cache.put(null, "Value"));
-
         // Έλεγχος ότι το null value ρίχνει NullPointerException
         assertThrows(NullPointerException.class, () -> cache.put(1, null));
-
         // Έλεγχος ότι η get με null κλειδί επιστρέφει null
         assertNull(cache.get(null));
 
@@ -221,14 +216,13 @@ class LRUCacheTest {
         cache.put(2, "Two");
         assertEquals("One", cache.get(1)); // Ελέγχουμε την τιμή
 
-        // Cache πρέπει να παραμείνει με 2 στοιχεία
+        //Πρέπει να παραμείνει με 2 στοιχεία
         assertEquals(2, cache.size());
     }
 
     @Test
     void testMixedOperations() {
-        // Tests cache behavior under a mix of operations
-        // Simulates realistic usage patterns
+        //Έλεγχος υπό διάφορα operations
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         for (int i = 0; i < 5; i++) {
             cache.put(i, "Value" + i);
@@ -239,16 +233,16 @@ class LRUCacheTest {
             }
         }
 
-        // Verify cache state after mixed operations
-        assertNull(cache.get(0), "First item should be evicted");
-        assertNotNull(cache.get(4), "Last item should be present");
-        assertNotNull(cache.get(3), "Recently accessed item should be present");
+        //
+        assertNull(cache.get(0), "First item should be out");
+        assertNotNull(cache.get(4), "Last item should be in cache");
+        assertNotNull(cache.get(3), "Recently accessed item should be in cache");
     }
 
     @Test
     void testRepeatedPutsOnSameKey() {
-        // Tests repeated updates to the same key
-        // Verifies that repeated updates maintain correct LRU order
+       //Ελέγχει την επαναλαμβανόμενη τοποθέτηση στο ίδιο κλειδί
+
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         for (int i = 0; i < 100; i++) {
             cache.put(1, "Value" + i);
@@ -260,41 +254,38 @@ class LRUCacheTest {
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        // Verify key 1 wasn't evicted despite many operations
+        // Ελέγχει οτι το κλειδί 1 δεν βγήκε από τη μνήμη
         assertEquals("Value99", cache.get(1));
     }
     @Test
     void testHeadTailPositions() {
-        // Assuming we've modified LRUCache to expose these methods for testing:
-        // getHead() - returns the most recently used item
-        // getTail() - returns the least recently used item
+      //Εξετάζουμε πως όντως παίρνουμε σωστά την κορυφή και την ουρά της μνήμης μέσω των getHead/Tail αντίστοιχα
         LRUCache<Integer, String> cache = new LRUCache<>(3);
+        // Αρχικός Έλεγχος
+        assertNull(cache.getHead(), "Head is null in empty cache");
+        assertNull(cache.getTail(), "Tail is null in empty cache");
 
-        // Test initial state
-        assertNull(cache.getHead(), "Head should be null in empty cache");
-        assertNull(cache.getTail(), "Tail should be null in empty cache");
-
-        // Test single insertion
+        // Μοναδική εισαγωγή
         cache.put(1, "One");
         assertEquals("One", cache.getHead(), "Head should be the only item");
         assertEquals("One", cache.getTail(), "Tail should be the only item");
 
-        // Test multiple insertions
+        //Πολλαπλές εισαγωγές
         cache.put(2, "Two");
         cache.put(3, "Three");
         assertEquals("Three", cache.getHead(), "Head should be most recent item");
         assertEquals("One", cache.getTail(), "Tail should be oldest item");
 
-        // Test access affecting order
+        // Αφού πειράξουμε τη σειρά
         cache.get(1);  // Access oldest item
         assertEquals("One", cache.getHead(), "Head should be recently accessed item");
         assertEquals("Two", cache.getTail(), "Tail should be least recently used");
 
-        // Test eviction
+        // Έλεγχος νέας προσθήκης και διαγραφής LRU κόμβου
         cache.put(4, "Four");
         assertEquals("Four", cache.getHead(), "Head should be new item");
         assertEquals("Three", cache.getTail(), "Tail should be oldest remaining item");
-        assertNull(cache.get(2), "Evicted item should be null");
+        assertNull(cache.get(2), "Kicked item should be null");
     }
 
 }

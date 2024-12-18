@@ -1,5 +1,5 @@
 package org.hua.cache;
-
+//το interface όπως δόθηκε στην εκφώνηση
 /**
  * A cache interface
  *

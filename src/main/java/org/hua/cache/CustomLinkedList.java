@@ -8,8 +8,8 @@ public class CustomLinkedList <K, V>{
     public CustomLinkedList() {
         head = new Node<>(null, null);
         tail = new Node<>(null, null);
-        head.next = tail;
-        tail.prev = head;
+        head.next = tail;//Σύνδεση
+        tail.prev = head;//λίστας
         size = 0;
     }
 
@@ -29,7 +29,7 @@ public class CustomLinkedList <K, V>{
         size--;
     }
 
-    // Αφαίρεση του τελευταίου κόμβου (LRU)
+    // Αφαίρεση του τελευταίου κόμβου
     public Node<K, V> removeLast() {
         if (size == 0) return null;
         Node<K, V> lastNode = tail.prev;

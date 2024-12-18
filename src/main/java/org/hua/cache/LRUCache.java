@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-// Υλοποίηση της LRU Cache
+// Υλοποίηση της LRU
 public class LRUCache<K,V> implements Cache<K,V> {
     private final int capacity;
     private final Map<K, Node<K, V>> cache;
@@ -18,7 +18,7 @@ public class LRUCache<K,V> implements Cache<K,V> {
     @Override
     public V get(K key) {
         if (key == null) {
-            return null; // Αν το κλειδί είναι null, επιστρέφουμε null.
+            return null; // Αν το κλειδί είναι null επιστρέφουμε null.
         }
         if (!cache.containsKey(key)) {
             return null;
@@ -32,6 +32,7 @@ public class LRUCache<K,V> implements Cache<K,V> {
 
     @Override
     public void put(K key, V value) {
+        //Έλεγχοι για null, χρησιμοποιούνται και στα tests
         if (key == null) {
             throw new NullPointerException("No Null keys pls ");
         }
@@ -57,7 +58,7 @@ public class LRUCache<K,V> implements Cache<K,V> {
             cache.put(key, newNode);
         }
     }
-
+    //Υλοποίηση μεθόδων ΚΑΙ στη Cache για να ζητάμε με cache.getHead/Tail και cache.size
     public int size() {
         return linkedList.size();
     }
