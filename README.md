@@ -25,7 +25,8 @@ mvn package
 Run main using 
 
 ```
-?????????
+java -cp target/LRUCache-1.0-SNAPSHOT.jar org.hua.cache.Main
+
 ```
 
 Run unit tests using 
