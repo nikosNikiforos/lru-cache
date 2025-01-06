@@ -36,6 +36,12 @@ public class CustomLinkedList <K, V>{
         remove(lastNode);
         return lastNode;
     }
+    public Node<K, V> removeFirst() {
+        if (size == 0) return null;
+        Node<K, V> firstNode = head.next;  // Get first real node (after dummy head)
+        remove(firstNode);                 // Use existing remove method
+        return firstNode;
+    }
 
     // Επιστροφή του πρώτου κόμβου
     public Node<K, V> getHead() {

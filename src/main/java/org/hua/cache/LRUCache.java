@@ -8,55 +8,79 @@ public class LRUCache<K,V> implements Cache<K,V> {
     private final int capacity;
     private final Map<K, Node<K, V>> cache;
     private final CustomLinkedList<K, V> linkedList;
+    private final CacheReplacementPolicy policy;
+    private int hitCount;
+    private int missCount;
 
     public LRUCache(int capacity) {
+        this(capacity, CacheReplacementPolicy.LRU);
+    }
+
+    public LRUCache(int capacity, CacheReplacementPolicy policy) {
         this.capacity = capacity;
         this.cache = new HashMap<>(capacity);
         this.linkedList = new CustomLinkedList<>();
+        this.hitCount = 0;
+        this.missCount = 0;
+        this.policy = policy;
     }
-
     @Override
     public V get(K key) {
-        if (key == null) {
-            return null; // Αν το κλειδί είναι null επιστρέφουμε null.
-        }
         if (!cache.containsKey(key)) {
             return null;
         }
+        hitCount++;
         Node<K, V> node = cache.get(key);
         linkedList.remove(node);
         linkedList.addFirst(node);
         return node.value;
     }
 
-
     @Override
     public void put(K key, V value) {
-        //Έλεγχοι για null, χρησιμοποιούνται και στα tests
-        if (key == null) {
-            throw new NullPointerException("No Null keys pls ");
-        }
-        if (value == null) {
-            throw new NullPointerException("No null values pls");
+        if (key == null || value == null) {
+            throw new NullPointerException("Null keys or values not allowed");
         }
 
         if (cache.containsKey(key)) {
-            // Αν το κλειδί υπάρχει, ενημερώνουμε την τιμή και τη σειρά
+            hitCount++;
             Node<K, V> node = cache.get(key);
             node.value = value;
             linkedList.remove(node);
             linkedList.addFirst(node);
         } else {
-            // Αν η cache είναι γεμάτη, αφαιρούμε το LRU
+            missCount++;
             if (cache.size() >= capacity) {
-                Node<K, V> lruNode = linkedList.removeLast();
-                cache.remove(lruNode.key);
+                // Here's where the policy makes a difference
+                Node<K, V> nodeToRemove = (policy == CacheReplacementPolicy.LRU) ?
+                        linkedList.removeLast() :    // LRU removes least recently used (from tail)
+                        linkedList.removeFirst();    // MRU removes most recently used (from head)
+                cache.remove(nodeToRemove.key);
             }
-            // Προσθέτουμε νέο στοιχείο
             Node<K, V> newNode = new Node<>(key, value);
             linkedList.addFirst(newNode);
             cache.put(key, newNode);
         }
+    }
+    public int getHitCount() {
+        return hitCount;
+    }
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public int getMissCount() {
+        return missCount;
+    }
+    public double getHitRate() {
+        long total = hitCount + missCount;
+        return total == 0 ? 0.0 : (double) hitCount / total * 100;
+    }
+
+
+    public double getMissRate() {
+        long total = hitCount + missCount;
+        return total == 0 ? 0.0 : (double) missCount / total * 100;
     }
     //Υλοποίηση μεθόδων ΚΑΙ στη Cache για να ζητάμε με cache.getHead/Tail και cache.size
     public int size() {
