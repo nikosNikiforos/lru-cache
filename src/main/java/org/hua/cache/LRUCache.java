@@ -51,11 +51,17 @@ public class LRUCache<K,V> implements Cache<K,V> {
         } else {
             missCount++;
             if (cache.size() >= capacity) {
-                // Here's where the policy makes a difference
-                Node<K, V> nodeToRemove = (policy == CacheReplacementPolicy.LRU) ?
-                        linkedList.removeLast() :    // LRU removes least recently used (from tail)
-                        linkedList.removeFirst();    // MRU removes most recently used (from head)
-                cache.remove(nodeToRemove.key);
+                // Επιλογή στρατηγικής
+                Node<K, V> nodeToRemove;
+                if (policy == CacheReplacementPolicy.LRU) {
+
+                    nodeToRemove = linkedList.removeLast() ;    // LRU
+                }
+                else {
+                    nodeToRemove = linkedList.removeFirst(); // MRU
+                }
+                    cache.remove(nodeToRemove.key);
+
             }
             Node<K, V> newNode = new Node<>(key, value);
             linkedList.addFirst(newNode);

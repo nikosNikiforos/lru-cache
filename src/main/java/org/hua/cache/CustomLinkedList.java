@@ -36,10 +36,11 @@ public class CustomLinkedList <K, V>{
         remove(lastNode);
         return lastNode;
     }
+    //Αφαίρεση του πρώτου κόμβου για MRU
     public Node<K, V> removeFirst() {
         if (size == 0) return null;
-        Node<K, V> firstNode = head.next;  // Get first real node (after dummy head)
-        remove(firstNode);                 // Use existing remove method
+        Node<K, V> firstNode = head.next;
+        remove(firstNode);
         return firstNode;
     }
 
