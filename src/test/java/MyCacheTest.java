@@ -1,15 +1,19 @@
-import org.hua.cache.LRUCache;
+import org.hua.cache.AbstractCache;
+import org.hua.cache.Cache;
+import org.hua.cache.CacheReplacementPolicy;
+import org.hua.cache.MyCache;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.hua.cache.Counter;
 
 
 
 
-class LRUCacheTest {
+class MyCacheTest {
     @Test
     void testHeadTailOrder() {
         // Έλεγχος της σωστής σειράς στοιχείων head/tail
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, CacheReplacementPolicy.MRU);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -157,7 +161,7 @@ class LRUCacheTest {
     @Test
     void testLargeCapacityAndOperations() {
         //Έλεγχος για μεγάλο capacity και πολλές λειτουργίες
-       LRUCache<Integer, String> largeCache = new LRUCache<>(100);
+        LRUCache<Integer, String> largeCache = new LRUCache<>(100);
 
         // Προσθήκη περισσότερων στοιχείων απο τη χωρητικότητα
         for (int i = 0; i < 150; i++) {
@@ -241,7 +245,7 @@ class LRUCacheTest {
 
     @Test
     void testRepeatedPutsOnSameKey() {
-       //Ελέγχει την επαναλαμβανόμενη τοποθέτηση στο ίδιο κλειδί
+        //Ελέγχει την επαναλαμβανόμενη τοποθέτηση στο ίδιο κλειδί
 
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         for (int i = 0; i < 100; i++) {
@@ -259,7 +263,7 @@ class LRUCacheTest {
     }
     @Test
     void testHeadTailPositions() {
-      //Εξετάζουμε πως όντως παίρνουμε σωστά την κορυφή και την ουρά της μνήμης μέσω των getHead/Tail αντίστοιχα
+        //Εξετάζουμε πως όντως παίρνουμε σωστά την κορυφή και την ουρά της μνήμης μέσω των getHead/Tail αντίστοιχα
         LRUCache<Integer, String> cache = new LRUCache<>(3);
         // Αρχικός Έλεγχος
         assertNull(cache.getHead(), "Head is null in empty cache");
@@ -289,6 +293,7 @@ class LRUCacheTest {
     }
 
 }
+
 
 
 
