@@ -1,19 +1,15 @@
-import org.hua.cache.AbstractCache;
-import org.hua.cache.Cache;
-import org.hua.cache.CacheReplacementPolicy;
-import org.hua.cache.MyCache;
-import org.junit.jupiter.api.Test;
+package org.hua.cache;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.*;
-import org.hua.cache.Counter;
-
-
-
 
 class MyCacheTest {
-    @Test
-    void testHeadTailOrder() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testHeadTailOrder(CacheReplacementPolicy policy) {
         // Έλεγχος της σωστής σειράς στοιχείων head/tail
-        MyCache<Integer, String> cache = new MyCache<>(3, CacheReplacementPolicy.MRU);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -22,10 +18,11 @@ class MyCacheTest {
         assertEquals("One", cache.getTail());
     }
 
-    @Test
-    void testAccessUpdatesOrder() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testAccessUpdatesOrder(CacheReplacementPolicy policy) {
         // Έλεγχος ενημέρωσης σειράς μετά από πρόσβαση σε στοιχείο
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -35,24 +32,31 @@ class MyCacheTest {
         assertEquals("Two", cache.getTail());
     }
 
-    @Test
-    void testEvictionOrder() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testEvictionOrder(CacheReplacementPolicy policy) {
         // Έλεγχος σωστής απομάκρυνσης στοιχείων όταν γεμίσει η cache
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
         cache.put(4, "Four");
 
         assertEquals("Four", cache.getHead());
-        assertEquals("Two", cache.getTail());
-        assertNull(cache.get(1));
+        if (policy == CacheReplacementPolicy.LRU) {
+            assertEquals("Two", cache.getTail());
+            assertNull(cache.get(1));
+        } else {
+            assertEquals("One", cache.getTail());
+            assertNull(cache.get(3));
+        }
     }
 
-    @Test
-    void testUpdateExisting() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testUpdateExisting(CacheReplacementPolicy policy) {
         // Έλεγχος ενημέρωσης υπάρχοντος στοιχείου
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(1, "One Updated");
@@ -61,30 +65,45 @@ class MyCacheTest {
         assertEquals("Two", cache.getTail());
     }
 
-    @Test
-    void testUpdateExisting2() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testUpdateExisting2(CacheReplacementPolicy policy) {
         // Εκτεταμένος έλεγχος ενημέρωσης υπαρχόντων κλειδιών
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
+
+
         cache.put(1, "One");
         cache.put(2, "Two");
+
+
         cache.put(1, "One Updated");
 
+        // Έλεγχος ότι και τα δύο στοιχεία υπάρχουν αφού η μνήμη δεν έχει γεμίσει
         assertEquals("One Updated", cache.get(1));
         assertEquals("Two", cache.get(2));
+
 
         cache.put(3, "Three");
         cache.put(4, "Four");
 
-        assertNull(cache.get(1));
-        assertEquals("Two", cache.get(2));
-        assertEquals("Three", cache.get(3));
-        assertEquals("Four", cache.get(4));
+        if (policy == CacheReplacementPolicy.LRU) {
+            // Για LRU, το παλαιότερο στοιχείο πρέπει να εκτοπιστεί
+            assertNull(cache.get(1), "LRU should evict least recently used");
+            assertEquals("Three", cache.get(3));
+            assertEquals("Four", cache.get(4));
+        } else {
+            // Για MRU, το πιο πρόσφατα χρησιμοποιημένο στοιχείο πριν το 4 πρέπει να εκτοπιστεί
+            assertNull(cache.get(3), "MRU should evict most recently used");
+            assertEquals("One Updated", cache.get(1));
+            assertEquals("Four", cache.get(4));
+        }
     }
 
-    @Test
-    void testFrequentAccess() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testFrequentAccess(CacheReplacementPolicy policy) {
         // Έλεγχος συμπεριφοράς με συχνή πρόσβαση στο ίδιο στοιχείο
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -95,10 +114,11 @@ class MyCacheTest {
         }
     }
 
-    @Test
-    void testCapacityEnforcement() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testCapacityEnforcement(CacheReplacementPolicy policy) {
         // Έλεγχος τήρησης ορίου χωρητικότητας
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         for (int i = 0; i < 10; i++) {
             cache.put(i, "Value" + i);
         }
@@ -107,10 +127,11 @@ class MyCacheTest {
         assertEquals("Value9", cache.getHead());
     }
 
-    @Test
-    void testBasicFunctionality() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testBasicFunctionality(CacheReplacementPolicy policy) {
         // Έλεγχος βασικής λειτουργικότητας και εκτοπισμού
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -121,16 +142,21 @@ class MyCacheTest {
 
         cache.put(4, "Four");
 
-        assertNull(cache.get(1));
-        assertEquals("Two", cache.get(2));
-        assertEquals("Three", cache.get(3));
+        if (policy == CacheReplacementPolicy.LRU) {
+            assertNull(cache.get(1));
+            assertEquals("Two", cache.get(2));
+        } else {
+            assertNull(cache.get(3));
+            assertEquals("One", cache.get(1));
+        }
         assertEquals("Four", cache.get(4));
     }
 
-    @Test
-    void testSingleCapacity() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testSingleCapacity(CacheReplacementPolicy policy) {
         // Έλεγχος συμπεριφοράς cache μεγέθους 1
-        LRUCache<Integer, String> singleCache = new LRUCache<>(1);
+        MyCache<Integer, String> singleCache = new MyCache<>(1, policy);
         singleCache.put(1, "One");
         assertEquals("One", singleCache.get(1));
 
@@ -139,10 +165,11 @@ class MyCacheTest {
         assertEquals("Two", singleCache.get(2));
     }
 
-    @Test
-    void testAccessPattern() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testAccessPattern(CacheReplacementPolicy policy) {
         // Έλεγχος μοτίβου πρόσβασης και επίδρασης στη σειρά LRU
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
@@ -152,38 +179,50 @@ class MyCacheTest {
 
         cache.put(4, "Four");
 
-        assertNull(cache.get(3));
-        assertEquals("One", cache.get(1));
-        assertEquals("Two", cache.get(2));
+        if (policy == CacheReplacementPolicy.LRU) {
+            assertNull(cache.get(3));
+            assertEquals("One", cache.get(1));
+            assertEquals("Two", cache.get(2));
+        } else {
+            assertNull(cache.get(2));
+            assertEquals("Three", cache.get(3));
+            assertEquals("One", cache.get(1));
+        }
         assertEquals("Four", cache.get(4));
     }
 
-    @Test
-    void testLargeCapacityAndOperations() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testLargeCapacityAndOperations(CacheReplacementPolicy policy) {
         //Έλεγχος για μεγάλο capacity και πολλές λειτουργίες
-        LRUCache<Integer, String> largeCache = new LRUCache<>(100);
+        MyCache<Integer, String> largeCache = new MyCache<>(100, policy);
 
-        // Προσθήκη περισσότερων στοιχείων απο τη χωρητικότητα
         for (int i = 0; i < 150; i++) {
             largeCache.put(i, "Value" + i);
         }
 
-        //Έλεγχος για τα τελευταία 100
-        for (int i = 50; i < 150; i++) {
-            assertEquals("Value" + i, largeCache.get(i));
-        }
-
-        //Επαλήθευση απομάκρυνσης των πρώτων
-        for (int i = 0; i < 50; i++) {
-            assertNull(largeCache.get(i));
+        if (policy == CacheReplacementPolicy.LRU) {
+            for (int i = 50; i < 150; i++) {
+                assertEquals("Value" + i, largeCache.get(i));
+            }
+            for (int i = 0; i < 50; i++) {
+                assertNull(largeCache.get(i));
+            }
+        } else {
+            for (int i = 0; i < 50; i++) {
+                assertEquals("Value" + i, largeCache.get(i));
+            }
+            for (int i = 99; i < 149; i++) {
+                assertNull(largeCache.get(i));
+            }
         }
     }
 
-    @Test
-    void testRepeatedKeyUpdateAndOrder() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testRepeatedKeyUpdateAndOrder(CacheReplacementPolicy policy) {
         // Έλεγχος για επαναλαμβανόμενη ενημέρωση του ίδιου κλειδιού ενώ παράλληλα γίνονται άλλες προσθήκες
-
-        LRUCache<Integer, String> bigCache = new LRUCache<>(3);
+        MyCache<Integer, String> bigCache = new MyCache<>(3, policy);
         bigCache.put(1, "One");
         bigCache.put(2, "Two");
 
@@ -191,23 +230,30 @@ class MyCacheTest {
             bigCache.put(1, "One-" + i);
             bigCache.put(i + 3, "Value" + i);
 
-            //Έλεγχος οτι υπάρχει στη μνήμη με σωστή τιμή
-            assertEquals("One-" + i, bigCache.get(1));
+            if (policy == CacheReplacementPolicy.LRU) {
+                assertEquals("One-" + i, bigCache.get(1));
+            } else {
+                if (i > 0) {
+                    assertNull(bigCache.get(1));
+                }
+            }
         }
-
-
     }
-    @Test
-    void testEmptyCache() {
+
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testEmptyCache(CacheReplacementPolicy policy) {
         // Δοκιμή για κενή μνήμη
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         assertNull(cache.get(1), "Empty cache so any key is null");
         assertNull(cache.get(0), "Empty cache so any key is null");
     }
 
-    @Test
-    void testNullHandling() {
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testNullHandling(CacheReplacementPolicy policy) {
+
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         // Έλεγχος ότι το null key ρίχνει NullPointerException
         assertThrows(NullPointerException.class, () -> cache.put(null, "Value"));
         // Έλεγχος ότι το null value ρίχνει NullPointerException
@@ -218,53 +264,41 @@ class MyCacheTest {
         // Κανονική εισαγωγή
         cache.put(1, "One");
         cache.put(2, "Two");
-        assertEquals("One", cache.get(1)); // Ελέγχουμε την τιμή
+        assertEquals("One", cache.get(1));
 
         //Πρέπει να παραμείνει με 2 στοιχεία
         assertEquals(2, cache.size());
     }
 
-    @Test
-    void testMixedOperations() {
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testMixedOperations(CacheReplacementPolicy policy) {
         //Έλεγχος υπό διάφορα operations
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
         for (int i = 0; i < 5; i++) {
             cache.put(i, "Value" + i);
-
-            // Intermix gets with puts
             if (i > 0) {
                 cache.get(i - 1);
             }
         }
 
-        //
-        assertNull(cache.get(0), "First item should be out");
-        assertNotNull(cache.get(4), "Last item should be in cache");
-        assertNotNull(cache.get(3), "Recently accessed item should be in cache");
-    }
-
-    @Test
-    void testRepeatedPutsOnSameKey() {
-        //Ελέγχει την επαναλαμβανόμενη τοποθέτηση στο ίδιο κλειδί
-
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
-        for (int i = 0; i < 100; i++) {
-            cache.put(1, "Value" + i);
+        if (policy == CacheReplacementPolicy.LRU) {
+            assertNull(cache.get(0), "First item should be out");
+            assertNotNull(cache.get(4), "Last item should be in cache");
+            assertNotNull(cache.get(3), "Recently accessed item should be in cache");
+        } else {
+            assertNull(cache.get(2), "Most recently used item should be out");
+            assertNotNull(cache.get(0), "Oldest item should be in cache");
+            assertNotNull(cache.get(4), "Last item should be in cache");
         }
-
-        assertEquals("Value99", cache.get(1));
-
-        // Fill remaining cache
-        cache.put(2, "Two");
-        cache.put(3, "Three");
-
-        // Ελέγχει οτι το κλειδί 1 δεν βγήκε από τη μνήμη
-        assertEquals("Value99", cache.get(1));
     }
-    @Test
-    void testHeadTailPositions() {
+
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testHeadTailPositions(CacheReplacementPolicy policy) {
         //Εξετάζουμε πως όντως παίρνουμε σωστά την κορυφή και την ουρά της μνήμης μέσω των getHead/Tail αντίστοιχα
-        LRUCache<Integer, String> cache = new LRUCache<>(3);
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
+
         // Αρχικός Έλεγχος
         assertNull(cache.getHead(), "Head is null in empty cache");
         assertNull(cache.getTail(), "Tail is null in empty cache");
@@ -281,19 +315,50 @@ class MyCacheTest {
         assertEquals("One", cache.getTail(), "Tail should be oldest item");
 
         // Αφού πειράξουμε τη σειρά
-        cache.get(1);  // Access oldest item
-        assertEquals("One", cache.getHead(), "Head should be recently accessed item");
-        assertEquals("Two", cache.getTail(), "Tail should be least recently used");
+        cache.get(1);
 
-        // Έλεγχος νέας προσθήκης και διαγραφής LRU κόμβου
+            assertEquals("One", cache.getHead(), "Head should be recently accessed item");
+            assertEquals("Two", cache.getTail(), "Tail should be least recently used");
+
+        // Έλεγχος νέας προσθήκης και διαγραφής κόμβου
         cache.put(4, "Four");
         assertEquals("Four", cache.getHead(), "Head should be new item");
-        assertEquals("Three", cache.getTail(), "Tail should be oldest remaining item");
-        assertNull(cache.get(2), "Kicked item should be null");
+        if (policy == CacheReplacementPolicy.LRU) {
+            assertEquals("Three", cache.getTail(), "Tail should be oldest remaining item");
+            assertNull(cache.get(2), "LRU: Kicked item should be null");
+        } else {
+            assertEquals("Two", cache.getTail(), "Tail should be oldest remaining item");
+            assertNull(cache.get(1), "MRU: Most recently used item should be evicted");
+        }
     }
 
-}
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testRepeatedPutsOnSameKey(CacheReplacementPolicy policy) {
+        //Ελέγχει την επαναλαμβανόμενη τοποθέτηση στο ίδιο κλειδί
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
+
+        // Επαναλαμβανόμενη εισαγωγή στο ίδιο κλειδί
+        for (int i = 0; i < 100; i++) {
+            cache.put(1, "Value" + i);
+        }
+        assertEquals("Value99", cache.get(1));
+
+        // Γέμισμα της υπόλοιπης μνήμης
+        cache.put(2, "Two");
+        cache.put(3, "Three");
 
 
+        cache.put(4, "Four");
 
+        if (policy == CacheReplacementPolicy.LRU) {
+            // Ελέγχει οτι το κλειδί 2 βγήκε από τη μνήμη γιατί είναι το λιγότερο πρόσφατα χρησιμοποιημένο
+            assertNull(cache.get(1));
 
+        } else {
+            // Στην MRU το κλειδί 3 θα βγει γιατί είναι το πιο πρόσφατα χρησιμοποιημένο πριν το 4
+            assertNull(cache.get(3));
+
+        }
+    }
+    }
