@@ -87,12 +87,12 @@ class MyCacheTest {
 
         if (policy == CacheReplacementPolicy.LRU) {
             // Για LRU, το παλαιότερο στοιχείο πρέπει να εκτοπιστεί
-            assertNull(cache.get(1), "LRU should evict least recently used");
+            assertNull(cache.get(1));
             assertEquals("Three", cache.get(3));
             assertEquals("Four", cache.get(4));
         } else {
             // Για MRU, το πιο πρόσφατα χρησιμοποιημένο στοιχείο πριν το 4 πρέπει να εκτοπιστεί
-            assertNull(cache.get(3), "MRU should evict most recently used");
+            assertNull(cache.get(3));
             assertEquals("One Updated", cache.get(1));
             assertEquals("Four", cache.get(4));
         }
@@ -244,8 +244,8 @@ class MyCacheTest {
     void testEmptyCache(CacheReplacementPolicy policy) {
         // Δοκιμή για κενή μνήμη
         MyCache<Integer, String> cache = new MyCache<>(3, policy);
-        assertNull(cache.get(1), "Empty cache so any key is null");
-        assertNull(cache.get(0), "Empty cache so any key is null");
+        assertNull(cache.get(1), "Empty cache ");
+        assertNull(cache.get(0), "Empty cache ");
     }
 
     @ParameterizedTest
@@ -282,13 +282,13 @@ class MyCacheTest {
         }
 
         if (policy == CacheReplacementPolicy.LRU) {
-            assertNull(cache.get(0), "First item should be out");
-            assertNotNull(cache.get(4), "Last item should be in cache");
-            assertNotNull(cache.get(3), "Recently accessed item should be in cache");
+            assertNull(cache.get(0), "Το πρώτο στοιχείο πρέπει να είναι εκτός");
+            assertNotNull(cache.get(4), "Το τελευταίο στοιχείο πρέπει να είναι στην cache");
+            assertNotNull(cache.get(3), "Το πρόσφατα προσπελασμένο στοιχείο πρέπει να είναι στην cache");
         } else {
-            assertNull(cache.get(2), "Most recently used item should be out");
-            assertNotNull(cache.get(0), "Oldest item should be in cache");
-            assertNotNull(cache.get(4), "Last item should be in cache");
+            assertNull(cache.get(2), "Το πιο πρόσφατα  στοιχείο πρέπει να είναι εκτός");
+            assertNotNull(cache.get(0), "Το παλαιότερο στοιχείο πρέπει να είναι στην cache");
+            assertNotNull(cache.get(4), "Το τελευταίο στοιχείο πρέπει να είναι στην cache");
         }
     }
 
@@ -299,35 +299,35 @@ class MyCacheTest {
         MyCache<Integer, String> cache = new MyCache<>(3, policy);
 
         // Αρχικός Έλεγχος
-        assertNull(cache.getHead(), "Head is null in empty cache");
-        assertNull(cache.getTail(), "Tail is null in empty cache");
+        assertNull(cache.getHead(), "Tο head είναι κενή σε άδεια cache");
+        assertNull(cache.getTail(), "To tail είναι κενή σε άδεια cache");
 
         // Μοναδική εισαγωγή
         cache.put(1, "One");
-        assertEquals("One", cache.getHead(), "Head should be the only item");
-        assertEquals("One", cache.getTail(), "Tail should be the only item");
+        assertEquals("One", cache.getHead(), "Tο head πρέπει να είναι το μοναδικό στοιχείο");
+        assertEquals("One", cache.getTail(), "To tail πρέπει να είναι το μοναδικό στοιχείο");
 
         //Πολλαπλές εισαγωγές
         cache.put(2, "Two");
         cache.put(3, "Three");
-        assertEquals("Three", cache.getHead(), "Head should be most recent item");
-        assertEquals("One", cache.getTail(), "Tail should be oldest item");
+        assertEquals("Three", cache.getHead(), "Tο head πρέπει να είναι το πιο πρόσφατο στοιχείο");
+        assertEquals("One", cache.getTail(), "To tail πρέπει να είναι το παλαιότερο στοιχείο");
 
         // Αφού πειράξουμε τη σειρά
         cache.get(1);
 
-            assertEquals("One", cache.getHead(), "Head should be recently accessed item");
-            assertEquals("Two", cache.getTail(), "Tail should be least recently used");
+        assertEquals("One", cache.getHead(), "Tο head πρέπει να είναι το πρόσφατα προσπελασμένο στοιχείο");
+        assertEquals("Two", cache.getTail(), "To tail πρέπει να είναι το λιγότερο πρόσφατα χρησιμοποιημένο");
 
         // Έλεγχος νέας προσθήκης και διαγραφής κόμβου
         cache.put(4, "Four");
-        assertEquals("Four", cache.getHead(), "Head should be new item");
+        assertEquals("Four", cache.getHead(), "Tο head πρέπει να είναι το νέο στοιχείο");
         if (policy == CacheReplacementPolicy.LRU) {
-            assertEquals("Three", cache.getTail(), "Tail should be oldest remaining item");
-            assertNull(cache.get(2), "LRU: Kicked item should be null");
+            assertEquals("Three", cache.getTail(), "To tail πρέπει να είναι το παλαιότερο εναπομείναν στοιχείο");
+            assertNull(cache.get(2), "LRU: Το εξωθημένο στοιχείο πρέπει να είναι κενό");
         } else {
-            assertEquals("Two", cache.getTail(), "Tail should be oldest remaining item");
-            assertNull(cache.get(1), "MRU: Most recently used item should be evicted");
+            assertEquals("Two", cache.getTail(), "To tail πρέπει να είναι το παλαιότερο εναπομείναν στοιχείο");
+            assertNull(cache.get(1), "MRU: Το πιο πρόσφατα χρησιμοποιημένο στοιχείο πρέπει να έχει εξωθηθεί");
         }
     }
 
