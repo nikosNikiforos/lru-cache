@@ -1,5 +1,4 @@
-package org.hua.cache;
-
+import org.hua.cache.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.*;
@@ -356,7 +355,7 @@ class MyCacheTest {
             assertNull(cache.get(1));
 
         } else {
-            // Στην MRU το κλειδί 3 θα βγει γιατί είναι το πιο πρόσφατα χρησιμοποιημένο πριν το 4
+            // Στη MRU το κλειδί 3 θα βγει γιατί είναι το πιο πρόσφατα χρησιμοποιημένο πριν το 4
             assertNull(cache.get(3));
 
         }
