@@ -22,7 +22,12 @@ public class Main {
             System.out.println("\nMRU (Most Recently Used) Strategy:");
             testPolicy(capacity, CacheReplacementPolicy.MRU);
 
+            System.out.println("\nLFU (Most Recently Used) Strategy:");
+            testPolicy(capacity, CacheReplacementPolicy.LFU);
+
             System.out.println("\n=========================\n");
+
+
         }
     }
 

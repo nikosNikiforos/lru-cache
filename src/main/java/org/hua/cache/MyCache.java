@@ -1,7 +1,10 @@
 package org.hua.cache;
 
+
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class MyCache<K, V> extends AbstractCache implements Cache<K, V> {
     private final int capacity; // Χωρητικότητα
@@ -48,11 +51,105 @@ public class MyCache<K, V> extends AbstractCache implements Cache<K, V> {
                 if (linkedList.size() > 0 && node != linkedList.getHead()) {
                     linkedList.remove(node);
                     linkedList.addFirst(node);
-                } else if (linkedList.size() == 0) {
+                } else if (linkedList.isEmpty()) {
                     linkedList.addFirst(node);
                 }
             }
         }
+
+
+    // Υλοποίηση στρατηγικής LFU
+    private class LFUStrategy implements CacheStrategy<K,V> {
+        // TreeMap για την παρακολούθηση συχνοτήτων χρήσης
+        // Key: συχνότητα, Value: λίστα κόμβων με αυτή τη συχνότητα
+        private final TreeMap<Integer, LinkedList<Node<K,V>>> frequencyMap = new TreeMap<>();
+
+        @Override
+        public Node<K,V> chooseNodeToRemove() {
+            // Έλεγχος αν το frequencyMap είναι άδειο
+            if (frequencyMap.isEmpty()) {
+                // Αν είναι άδειο, παίρνουμε τον πρώτο κόμβο από τη λίστα
+                Node<K,V> firstNode = linkedList.getHead();
+                linkedList.remove(firstNode);
+                return firstNode;
+            }
+
+            // Παίρνουμε τη μικρότερη συχνότητα (πρώτο κλειδί του TreeMap)
+            int minFrequency = frequencyMap.firstKey();
+
+            // Παίρνουμε τη λίστα κόμβων με τη μικρότερη συχνότητα
+            LinkedList<Node<K,V>> leastFrequentNodes = frequencyMap.get(minFrequency);
+
+            // Αφαιρούμε τον πρώτο κόμβο από τη λίστα (LRU μεταξύ των λιγότερο συχνών)
+            Node<K,V> nodeToRemove = leastFrequentNodes.removeFirst();
+
+            // Αν η λίστα άδειασε, αφαιρούμε την καταχώρηση από το frequencyMap
+            if (leastFrequentNodes.isEmpty()) {
+                frequencyMap.remove(minFrequency);
+            }
+
+            linkedList.remove(nodeToRemove);  // Αφαίρεση από τη λίστα
+            return nodeToRemove;
+        }
+
+        @Override
+        public void accessNode(Node<K,V> node) {
+            // Εξασφάλιση ότι ο κόμβος έχει αρχικοποιημένη συχνότητα
+            if (node.frequency == 0) {
+                node.frequency = 1;
+            }
+
+            // Αφαίρεση του κόμβου από την τρέχουσα συχνότητα
+            removeFromFrequencyMap(node);
+
+            // Αύξηση της συχνότητας του κόμβου
+            node.frequency++;
+
+            // Προσθήκη του κόμβου στη νέα συχνότητα
+            addToFrequencyMap(node);
+
+            // Ενημέρωση θέσης στη λίστα
+            linkedList.remove(node);
+            linkedList.addFirst(node);
+        }
+
+        // Βοηθητική μέθοδος για την αφαίρεση κόμβου από το frequencyMap
+        private void removeFromFrequencyMap(Node<K,V> node) {
+            LinkedList<Node<K,V>> nodes = frequencyMap.get(node.frequency);
+            if (nodes != null) {
+                nodes.remove(node);
+                if (nodes.isEmpty()) {
+                    frequencyMap.remove(node.frequency);
+                }
+            }
+        }
+
+        // Βοηθητική μέθοδος για την προσθήκη κόμβου στο frequencyMap
+        private void addToFrequencyMap(Node<K,V> node) {
+            // Εξασφάλιση ότι νέοι κόμβοι ξεκινούν με συχνότητα 1
+            if (node.frequency == 0) {
+                node.frequency = 1;
+            }
+
+            // Παίρνουμε τη λίστα κόμβων για τη συγκεκριμένη συχνότητα
+            LinkedList<Node<K,V>> nodesWithSameFrequency = frequencyMap.get(node.frequency);
+
+            // Αν δεν υπάρχει λίστα για αυτή τη συχνότητα, δημιουργούμε μία καινούρια
+            if (nodesWithSameFrequency == null) {
+                nodesWithSameFrequency = new LinkedList<>();
+                frequencyMap.put(node.frequency, nodesWithSameFrequency);
+            }
+
+            // Προσθέτουμε τον κόμβο στη λίστα
+            nodesWithSameFrequency.add(node);
+        }
+
+        // Βοηθητική μέθοδος για την αρχικοποίηση νέου κόμβου
+        public void initializeNewNode(Node<K,V> node) {
+            node.frequency = 1;  // Αρχικοποίηση συχνότητας
+            addToFrequencyMap(node);  // Προσθήκη στο frequency map
+        }
+    }
 
             // Constructor με προεπιλεγμένη στρατηγική LRU
             public MyCache(int capacity) {
@@ -70,17 +167,21 @@ public class MyCache<K, V> extends AbstractCache implements Cache<K, V> {
                 this.policy = policy;
 
                 // Αρχικοποίηση στρατηγικής βάσει επιλογής
-                switch (policy) {
+                switch(policy) {
                     case LRU:
                         this.strategy = new LRUStrategy();
                         break;
                     case MRU:
                         this.strategy = new MRUStrategy();
                         break;
+                    case LFU:
+                        this.strategy = new LFUStrategy();
+                        break;
                     default:
                         throw new IllegalArgumentException("Unknown policy: " + policy);
                 }
-            }
+                }
+
 
             @Override
             public V get(K key) {
@@ -118,6 +219,10 @@ public class MyCache<K, V> extends AbstractCache implements Cache<K, V> {
                     Node<K, V> newNode = new Node<>(key, value);
                     cache.put(key, newNode);
                     linkedList.addFirst(newNode);  // Add to list first
+
+                    if (strategy instanceof LFUStrategy) {
+                        ((LFUStrategy) strategy).initializeNewNode(newNode);
+                    }
                 }
             }
 

@@ -58,4 +58,9 @@ public class CustomLinkedList <K, V>{
     public int size() {
         return size;
     }
+
+    // Έλεγχος αν η λίστα είναι άδεια
+    public boolean isEmpty() {
+        return size == 0;  // Αν το μέγεθος είναι 0, η λίστα είναι άδεια
+    }
 }
