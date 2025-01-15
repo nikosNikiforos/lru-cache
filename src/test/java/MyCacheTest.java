@@ -13,8 +13,19 @@ class MyCacheTest {
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        assertEquals("Three", cache.getHead());
-        assertEquals("One", cache.getTail());
+        // Διαφορετικές προσβάσεις για να επηρεάσουν τις συχνότητες
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Δημιουργία διαφορετικών συχνοτήτων
+            cache.get(3); // frequency: 2
+            cache.get(3); // frequency: 3
+            cache.get(2); // frequency: 2
+            assertEquals("Two", cache.getHead());
+            assertEquals("One", cache.getTail()); // Μικρότερη συχνότητα
+        }
+        else {
+            assertEquals("Three", cache.getHead());
+            assertEquals("One", cache.getTail()); // Μικρότερη συχνότητα
+        }
     }
 
     @ParameterizedTest
@@ -39,15 +50,26 @@ class MyCacheTest {
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
+
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Δημιουργία διαφορετικών συχνοτήτων
+            cache.get(1); // freq 2
+            cache.get(1); // freq 3
+            cache.get(2); // freq 2
+        }
+
         cache.put(4, "Four");
 
         assertEquals("Four", cache.getHead());
         if (policy == CacheReplacementPolicy.LRU) {
             assertEquals("Two", cache.getTail());
             assertNull(cache.get(1));
-        } else {
+        } else if (policy == CacheReplacementPolicy.MRU) {
             assertEquals("One", cache.getTail());
             assertNull(cache.get(3));
+        } else { // LFU
+            assertNull(cache.get(3));
+            assertNotNull(cache.get(1));
         }
     }
 
@@ -64,39 +86,49 @@ class MyCacheTest {
         assertEquals("Two", cache.getTail());
     }
 
+
+
     @ParameterizedTest
     @EnumSource(CacheReplacementPolicy.class)
     void testUpdateExisting2(CacheReplacementPolicy policy) {
         // Εκτεταμένος έλεγχος ενημέρωσης υπαρχόντων κλειδιών
         MyCache<Integer, String> cache = new MyCache<>(3, policy);
 
-
         cache.put(1, "One");
         cache.put(2, "Two");
 
+        // Αύξηση συχνότητας για LFU
+        if (policy == CacheReplacementPolicy.LFU) {
+            cache.get(1);
+            cache.get(1);
+            cache.get(2);
+        }
 
         cache.put(1, "One Updated");
 
-        // Έλεγχος ότι και τα δύο στοιχεία υπάρχουν αφού η μνήμη δεν έχει γεμίσει
         assertEquals("One Updated", cache.get(1));
         assertEquals("Two", cache.get(2));
-
 
         cache.put(3, "Three");
         cache.put(4, "Four");
 
-        if (policy == CacheReplacementPolicy.LRU) {
-            // Για LRU, το παλαιότερο στοιχείο πρέπει να εκτοπιστεί
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Το "One Updated" έχει υψηλότερη συχνότητα (3)
+            assertNotNull(cache.get(1));
+            assertNotNull(cache.get(2));
+            assertNull(cache.get(3));
+            assertNotNull(cache.get(4));
+        } else if (policy == CacheReplacementPolicy.LRU) {
             assertNull(cache.get(1));
             assertEquals("Three", cache.get(3));
             assertEquals("Four", cache.get(4));
         } else {
-            // Για MRU, το πιο πρόσφατα χρησιμοποιημένο στοιχείο πριν το 4 πρέπει να εκτοπιστεί
             assertNull(cache.get(3));
             assertEquals("One Updated", cache.get(1));
             assertEquals("Four", cache.get(4));
         }
     }
+
 
     @ParameterizedTest
     @EnumSource(CacheReplacementPolicy.class)
@@ -135,13 +167,24 @@ class MyCacheTest {
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        assertEquals("One", cache.get(1));
-        assertEquals("Two", cache.get(2));
-        assertEquals("Three", cache.get(3));
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Δημιουργία διαφορετικών συχνοτήτων χρήσης
+            cache.get(1); // frequency: 2
+            cache.get(1); // frequency: 3
+            cache.get(2); // frequency: 2
+        } else {
+            assertEquals("One", cache.get(1));
+            assertEquals("Two", cache.get(2));
+            assertEquals("Three", cache.get(3));
+        }
 
         cache.put(4, "Four");
 
-        if (policy == CacheReplacementPolicy.LRU) {
+        if (policy == CacheReplacementPolicy.LFU) {
+            assertNotNull(cache.get(1));
+            assertNotNull(cache.get(2));
+            assertNull(cache.get(3));
+        } else if (policy == CacheReplacementPolicy.LRU) {
             assertNull(cache.get(1));
             assertEquals("Two", cache.get(2));
         } else {
@@ -167,18 +210,29 @@ class MyCacheTest {
     @ParameterizedTest
     @EnumSource(CacheReplacementPolicy.class)
     void testAccessPattern(CacheReplacementPolicy policy) {
-        // Έλεγχος μοτίβου πρόσβασης και επίδρασης στη σειρά LRU
+        // Έλεγχος μοτίβου πρόσβασης και επίδρασης στη σειρά
         MyCache<Integer, String> cache = new MyCache<>(3, policy);
         cache.put(1, "One");
         cache.put(2, "Two");
         cache.put(3, "Three");
 
-        cache.get(1);
-        cache.get(2);
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Δημιουργία διαφορετικών συχνοτήτων
+            cache.get(1); // frequency: 2
+            cache.get(1); // frequency: 3
+            cache.get(2); // frequency: 2
+        } else {
+            cache.get(1);
+            cache.get(2);
+        }
 
         cache.put(4, "Four");
 
-        if (policy == CacheReplacementPolicy.LRU) {
+        if (policy == CacheReplacementPolicy.LFU) {
+            assertNull(cache.get(3));
+            assertNotNull(cache.get(1));
+            assertNotNull(cache.get(2));
+        } else if (policy == CacheReplacementPolicy.LRU) {
             assertNull(cache.get(3));
             assertEquals("One", cache.get(1));
             assertEquals("Two", cache.get(2));
@@ -196,11 +250,28 @@ class MyCacheTest {
         //Έλεγχος για μεγάλο capacity και πολλές λειτουργίες
         MyCache<Integer, String> largeCache = new MyCache<>(100, policy);
 
+        // Εισαγωγή στοιχείων με διαφορετικές συχνότητες για LFU
         for (int i = 0; i < 150; i++) {
             largeCache.put(i, "Value" + i);
+            if (policy == CacheReplacementPolicy.LFU && i < 50) {
+                // Αύξηση συχνότητας για τα πρώτα 50 στοιχεία
+                largeCache.get(i); // frequency: 2
+                if (i < 25) {
+                    largeCache.get(i); // frequency: 3 για τα πρώτα 25
+                }
+            }
         }
 
-        if (policy == CacheReplacementPolicy.LRU) {
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Έλεγχος ότι τα στοιχεία με υψηλότερη συχνότητα παραμένουν
+            for (int i = 0; i < 25; i++) {
+                assertNotNull(largeCache.get(i), "Στοιχεία με συχνότητα 3 πρέπει να παραμείνουν");
+            }
+            for (int i = 25; i < 50; i++) {
+                assertNotNull(largeCache.get(i), "Στοιχεία με συχνότητα 2 πρέπει να παραμείνουν");
+            }
+            // Τα υπόλοιπα εξαρτώνται από τη χωρητικότητα και τη σειρά εισαγωγής
+        } else if (policy == CacheReplacementPolicy.LRU) {
             for (int i = 50; i < 150; i++) {
                 assertEquals("Value" + i, largeCache.get(i));
             }
@@ -225,11 +296,20 @@ class MyCacheTest {
         bigCache.put(1, "One");
         bigCache.put(2, "Two");
 
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Αυξάνουμε τη συχνότητα του "One" στην αρχή
+            bigCache.get(1); // frequency: 2
+            bigCache.get(1); // frequency: 3
+        }
+
         for (int i = 0; i < 10; i++) {
             bigCache.put(1, "One-" + i);
             bigCache.put(i + 3, "Value" + i);
 
-            if (policy == CacheReplacementPolicy.LRU) {
+            if (policy == CacheReplacementPolicy.LFU) {
+                // Το "One" διατηρεί την υψηλή συχνότητα παρά τις ενημερώσεις
+                assertNotNull(bigCache.get(1), "Στοιχείο με υψηλή συχνότητα πρέπει να παραμείνει");
+            } else if (policy == CacheReplacementPolicy.LRU) {
                 assertEquals("One-" + i, bigCache.get(1));
             } else {
                 if (i > 0) {
@@ -322,7 +402,12 @@ class MyCacheTest {
         // Έλεγχος νέας προσθήκης και διαγραφής κόμβου
         cache.put(4, "Four");
         assertEquals("Four", cache.getHead(), "Tο head πρέπει να είναι το νέο στοιχείο");
-        if (policy == CacheReplacementPolicy.LRU) {
+        if (policy == CacheReplacementPolicy.LFU) {
+            assertNull(cache.get(2), "LFU: Το στοιχείο με τη μικρότερη συχνότητα πρέπει να εξωθηθεί");
+            assertNotNull(cache.get(1), "LFU: Το στοιχείο με τη μεγαλύτερη συχνότητα πρέπει να παραμείνει");
+            assertNotNull(cache.get(3), "LFU: Το στοιχείο με μεσαία συχνότητα πρέπει να παραμείνει");
+
+        }else if (policy == CacheReplacementPolicy.LRU) {
             assertEquals("Three", cache.getTail(), "To tail πρέπει να είναι το παλαιότερο εναπομείναν στοιχείο");
             assertNull(cache.get(2), "LRU: Το εξωθημένο στοιχείο πρέπει να είναι κενό");
         } else {
@@ -340,6 +425,10 @@ class MyCacheTest {
         // Επαναλαμβανόμενη εισαγωγή στο ίδιο κλειδί
         for (int i = 0; i < 100; i++) {
             cache.put(1, "Value" + i);
+            if (policy == CacheReplacementPolicy.LFU && i % 10 == 0) {
+                // Περιοδική πρόσβαση για αύξηση συχνότητας στο LFU
+                cache.get(1);
+            }
         }
         assertEquals("Value99", cache.get(1));
 
@@ -347,17 +436,48 @@ class MyCacheTest {
         cache.put(2, "Two");
         cache.put(3, "Three");
 
+        if (policy == CacheReplacementPolicy.LFU) {
+            // Αύξηση συχνότητας του "Two"
+            cache.get(2);
+            cache.get(2);
+        }
 
         cache.put(4, "Four");
 
-        if (policy == CacheReplacementPolicy.LRU) {
-            // Ελέγχει οτι το κλειδί 2 βγήκε από τη μνήμη γιατί είναι το λιγότερο πρόσφατα χρησιμοποιημένο
-            assertNull(cache.get(1));
-
-        } else {
-            // Στη MRU το κλειδί 3 θα βγει γιατί είναι το πιο πρόσφατα χρησιμοποιημένο πριν το 4
+        if (policy == CacheReplacementPolicy.LFU) {
             assertNull(cache.get(3));
+            assertNotNull(cache.get(1));
+            assertNotNull(cache.get(2));
+        } else if (policy == CacheReplacementPolicy.LRU) {
+            assertNull(cache.get(1));
+        } else {
+            assertNull(cache.get(3));
+        }
+    }
 
+    @ParameterizedTest
+    @EnumSource(CacheReplacementPolicy.class)
+    void testLFUSpecificBehavior(CacheReplacementPolicy policy) {
+        // Έλεγχος LFU με διαφορετικές συχνότητες χρήσης
+        MyCache<Integer, String> cache = new MyCache<>(3, policy);
+
+        cache.put(1, "One");
+        cache.put(2, "Two");
+        cache.put(3, "Three");
+
+        // Δημιουργία διαφορετικών συχνοτήτων
+        cache.get(1); // frequency: 2
+        cache.get(1); // frequency: 3
+        cache.get(2); // frequency: 2
+
+        // Προσθήκη νέου στοιχείου
+        cache.put(4, "Four");
+
+        if (policy == CacheReplacementPolicy.LFU) {
+            assertNull(cache.get(3));
+            assertNotNull(cache.get(1));
+            assertNotNull(cache.get(2));
+            assertNotNull(cache.get(4));
         }
     }
     }
