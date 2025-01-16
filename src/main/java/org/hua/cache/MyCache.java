@@ -80,7 +80,7 @@ public class MyCache<K, V> extends AbstractCache implements Cache<K, V> {
             // Παίρνουμε τη λίστα κόμβων με τη μικρότερη συχνότητα
             LinkedList<Node<K,V>> leastFrequentNodes = frequencyMap.get(minFrequency);
 
-            // Αφαιρούμε τον πρώτο κόμβο από τη λίστα (LRU μεταξύ των λιγότερο συχνών)
+            // Αφαιρούμε τον πρώτο κόμβο από τη λίστα (LRU )
             Node<K,V> nodeToRemove = leastFrequentNodes.removeFirst();
 
             // Αν η λίστα άδειασε, αφαιρούμε την καταχώρηση από το frequencyMap
